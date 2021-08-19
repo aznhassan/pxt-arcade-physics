@@ -1,6 +1,5 @@
 function transferPhysicsEngine() {
     let newPhysicsEngine = new ArcadePhysicsEnginePlus(500, 2, 4, 500)
-    game.physicsEngine().transferSprites(newPhysicsEngine)
     game.setPhysicsEngine(newPhysicsEngine)
 }
 
