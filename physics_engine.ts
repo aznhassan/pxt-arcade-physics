@@ -4,7 +4,6 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     constructor(maxVelocity: number, minSingleStep: number, maxSingleStep: number, maxMomentum: 500) {
         super(maxVelocity, minSingleStep, maxSingleStep);
         this.maxMomentum = maxMomentum;
-        console.log("[HASUFI] Constructing new physics engine");
     }
 
     get maxMomentum(): number {
