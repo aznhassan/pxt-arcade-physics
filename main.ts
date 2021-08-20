@@ -50,6 +50,7 @@ let sceneChangeHandler = (oldScene: scene.Scene) => {
     // Don't zero out the velocity when there is no more input from the controller,
     // instead let gravity && drag handle slowing down moving objects
     controller.setRetainVelocityOnNoInput(true);
+    controller.useAccelerationInstead(true);
 }
 
 console.log("[HASUFI] HELLO THERE")
