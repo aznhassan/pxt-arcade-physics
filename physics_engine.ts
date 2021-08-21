@@ -2,13 +2,21 @@
  * An upgraded Physics Engine that includes drag
 */
 class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
-    protected _maxDrag: Fx8;
+    protected _maxDrag: Fx8
     protected readonly halfAirDensity = Fx8(0.01)
+    protected _debug: boolean
     // protected readonly airFlowVelocity = Fx8(10)
     
     constructor(maxVelocity: number, minSingleStep: number, maxSingleStep: number, maxDrag: 500) {
         super(maxVelocity, minSingleStep, maxSingleStep);
         this.maxDrag = maxDrag;
+        this._debug = true
+    }
+
+    protected debug(message: string | object) {
+        if (this._debug) {
+            console.log(message)
+        }
     }
 
     get maxDrag(): number {
@@ -20,7 +28,7 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     }
 
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
-        const ovx = this.constrain(sprite._vx);
+        const ovx = this.constrainMax(sprite._vx, sprite.data['maxSpeedX']);
         const ovy = this.constrain(sprite._vy);
         sprite._lastX = sprite._x;
         sprite._lastY = sprite._y;
@@ -33,9 +41,9 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             const area: Fx8 = Fx8(sprite.height)
 
             if (sprite.data['mass']) {
-                // console.log(`dragCoefficient: ${Fx.toFloat(dragCoefficient)}`);
-                // console.log(`mass: ${Fx.toFloat(mass)}`);
-                // console.log(`area: ${Fx.toFloat(area)}`);
+                // this.debug(`dragCoefficient: ${Fx.toFloat(dragCoefficient)}`);
+                // this.debug(`mass: ${Fx.toFloat(mass)}`);
+                // this.debug(`area: ${Fx.toFloat(area)}`);
             }            
             // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
             let dragX = Fx.div(
@@ -54,14 +62,12 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 ),
                 mass
             )
-            if (sprite.data['mass']) {
-                console.log(`Vx vs FxVx: ${sprite.vx}, ${Fx.toFloat(sprite._vx)}`)
-                
+            if (sprite.data['mass']) {                
                 let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
                     (sprite.data['dragCoefficient'] || 1.05) * (sprite.height))
                     / sprite.data['mass'] || 1
-                console.log(`NonFxCalculatedDrag: ${otherDragX}`)
-                console.log(`totalDrag: ${Fx.toFloat(dragX)}`)
+                this.debug(`NonFxCalculatedDrag: ${otherDragX}`)
+                this.debug(`totalDrag: ${Fx.toFloat(dragX)}`)
             }
             
             return Fx.idiv(
@@ -74,20 +80,20 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
         };
 
         const dragX = calculateDragX(sprite)
-        if (sprite.data['mass']) {
-            console.log(`_vx: ${Fx.toFloat(sprite._vx)}`)
-            console.log(`dragx: ${Fx.toFloat(dragX)}`)
-        }
-
         if (Fx.compare(Fx.zeroFx8, dragX) > 0) {
             Fx.neg(dragX)
         }
-        sprite._vx = Fx.sub(
-            sprite._vx,
-            dragX
-        )
         if (sprite.data['mass']) {
-            console.log(`new _vx: ${Fx.toFloat(sprite._vx)}`)
+            this.debug(`_vx: ${Fx.toFloat(sprite._vx)}`)
+            this.debug(`dragx: ${Fx.toFloat(dragX)}`)
+        }
+
+        // sprite._vx = Fx.sub(
+        //     sprite._vx,
+        //     dragX
+        // )
+        if (sprite.data['mass']) {
+            this.debug(`new _vx: ${Fx.toFloat(sprite._vx)}`)
         }
 
         if (sprite._ax) {
@@ -146,7 +152,7 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 sprite._vy = Fx.zeroFx8;
         }
 
-        sprite._vx = this.constrain(sprite._vx);
+        sprite._vx = this.constrainMax(sprite._vx, sprite.data['maxSpeedX']);
         sprite._vy = this.constrain(sprite._vy);
 
         const dx = Fx8(Fx.toFloat(Fx.add(sprite._vx, ovx)) * dt2 / 1000);
@@ -173,6 +179,18 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             dy,
             xStep,
             yStep
+        );
+    }
+
+    protected constrainMax(v: Fx8, max?: number) {
+        const maxVel = max ? Fx8(max) : this.maxVelocity
+        const negMaxVel = Fx.neg(maxVel)
+        return Fx.max(
+            Fx.min(
+                maxVel,
+                v
+            ),
+            negMaxVel
         );
     }
 }

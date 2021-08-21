@@ -9,7 +9,8 @@
         "main.ts",
         "README.md",
         "assets.json",
-        "physics_engine.ts"
+        "physics_engine.ts",
+        "sprite_physics.ts"
     ],
     "testFiles": [
         "test.ts"
