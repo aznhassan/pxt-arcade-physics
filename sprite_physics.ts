@@ -33,6 +33,28 @@ namespace sprites {
     }
 
     /**
+     * Sets the min horizontal speed of a sprite
+     */
+    //% blockId=setMinSpeedX block="set $sprite=variables_get minSpeedX to $value"
+    //% group="Physics"
+    //% weight=10
+    //% blockGap=8
+    export function setMinSpeedX(sprite: Sprite, value: number) {
+        setDataNumber(sprite, 'minSpeedX', value);
+    }
+
+    /**
+     * Sets the drag coefficient of a sprite
+     */
+    //% blockId=setDragCoefficent block="set $sprite=variables_get dragCoefficient to $drag"
+    //% group="Physics"
+    //% weight=10
+    //% blockGap=8
+    export function setDragCoefficent(sprite: Sprite, drag: number) {
+        setDataNumber(sprite, 'dragCoefficient', drag);
+    }
+
+    /**
      * Gets a number in the data of a sprite
      */
     function readDataNumber(sprite: Sprite, name: string): number {
