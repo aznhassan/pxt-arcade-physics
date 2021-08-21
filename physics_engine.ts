@@ -1,9 +1,9 @@
-/**
+ /**
  * An upgraded Physics Engine that includes drag
 */
 class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected _maxDrag: Fx8;
-    protected readonly halfAirDensity = Fx8(0.1)
+    protected readonly halfAirDensity = Fx8(0.01)
     // protected readonly airFlowVelocity = Fx8(10)
     
     constructor(maxVelocity: number, minSingleStep: number, maxSingleStep: number, maxDrag: 500) {
@@ -30,7 +30,7 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             // Use the drag coefficient off a square if one is not set
             const dragCoefficient: Fx8 = Fx8(sprite.data['dragCoefficient'] || 1.05)
             const mass: Fx8 = Fx8(sprite.data['mass'] || 1);
-            const area: Fx8 = Fx8(sprite.height *sprite.width)
+            const area: Fx8 = Fx8(sprite.height)
 
             if (sprite.data['mass']) {
                 // console.log(`dragCoefficient: ${Fx.toFloat(dragCoefficient)}`);
@@ -54,10 +54,15 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 ),
                 mass
             )
-            // if (sprite.data['mass']) {
-            //     console.log(`dtMs: ${dtMs}`)
-            //     console.log(`totalDrag: ${Fx.toFloat(dragX)}`)
-            // }
+            if (sprite.data['mass']) {
+                console.log(`Vx vs FxVx: ${sprite.vx}, ${Fx.toFloat(sprite._vx)}`)
+                
+                let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
+                    (sprite.data['dragCoefficient'] || 1.05) * (sprite.height))
+                    / sprite.data['mass'] || 1
+                console.log(`NonFxCalculatedDrag: ${otherDragX}`)
+                console.log(`totalDrag: ${Fx.toFloat(dragX)}`)
+            }
             
             return Fx.idiv(
                 Fx.imul(
@@ -68,14 +73,19 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             );
         };
 
+        const dragX = calculateDragX(sprite)
         if (sprite.data['mass']) {
             console.log(`_vx: ${Fx.toFloat(sprite._vx)}`)
-            console.log(`dragx: ${Fx.toFloat(calculateDragX(sprite))}`)
+            console.log(`dragx: ${Fx.toFloat(dragX)}`)
         }
-        // sprite._vx = Fx.add(
-        //     sprite._vx,
-        //     calculateDragX(sprite)
-        // )
+
+        if (Fx.compare(Fx.zeroFx8, dragX) > 0) {
+            Fx.neg(dragX)
+        }
+        sprite._vx = Fx.sub(
+            sprite._vx,
+            dragX
+        )
         if (sprite.data['mass']) {
             console.log(`new _vx: ${Fx.toFloat(sprite._vx)}`)
         }
