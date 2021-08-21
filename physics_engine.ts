@@ -41,9 +41,6 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             const area: Fx8 = Fx8(sprite.height)
 
             if (sprite.data['mass']) {
-                // this.debug(`dragCoefficient: ${Fx.toFloat(dragCoefficient)}`);
-                // this.debug(`mass: ${Fx.toFloat(mass)}`);
-                // this.debug(`area: ${Fx.toFloat(area)}`);
             }            
             // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
             let dragX = Fx.div(
@@ -79,19 +76,20 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             );
         };
 
-        const dragX = calculateDragX(sprite)
-        if (Fx.compare(Fx.zeroFx8, dragX) > 0) {
-            Fx.neg(dragX)
-        }
         if (sprite.data['mass']) {
+            // TODO: Figure out how to make this stronger when the velocity is low
+            let dragX = calculateDragX(sprite)
+            if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
+                dragX = Fx.neg(dragX)
+            }
             this.debug(`_vx: ${Fx.toFloat(sprite._vx)}`)
             this.debug(`dragx: ${Fx.toFloat(dragX)}`)
+            sprite._vx = Fx.add(
+                sprite._vx,
+                dragX
+            )
         }
 
-        // sprite._vx = Fx.sub(
-        //     sprite._vx,
-        //     dragX
-        // )
         if (sprite.data['mass']) {
             this.debug(`new _vx: ${Fx.toFloat(sprite._vx)}`)
         }
