@@ -3,12 +3,6 @@ namespace sprites {
      * The key used to access the sprite physics class object from the sprite data
      */
     const spritePhysicsClassKey = 'spritePhysics'
-
-    class SpritePhysics {
-        private _mass: Fx8
-        private _force: Fx8
-        private _impulse: Fx8
-    }
     
     /**
      * Sets the mass of a sprite
@@ -18,7 +12,8 @@ namespace sprites {
     //% weight=10
     //% blockGap=8
     export function setMass(sprite: Sprite, value: number) {
-        setDataNumber(sprite, 'mass', value);
+        // setDataNumber(sprite, 'mass', value);
+        getPhysics(sprite).Mass = value
     }
 
     /**
@@ -29,18 +24,20 @@ namespace sprites {
     //% weight=10
     //% blockGap=8
     export function getMass(sprite: Sprite): number {
-        return readDataNumber(sprite, 'mass');
+        return getPhysics(sprite).Mass
+        // return readDataNumber(sprite, 'mass');
     }
 
     /**
      * Sets the max horizontal speed of a sprite
      */
-    //% blockId=setMaxSpeedX block="set $sprite=variables_get maxSpeedX to $value"
+    //% blockId=setMaxSpeed block="set $sprite=variables_get maxSpeed to $value"
     //% group="Physics"
     //% weight=10
     //% blockGap=8
-    export function setMaxSpeedX(sprite: Sprite, value: number) {
-        setDataNumber(sprite, 'maxSpeedX', value);
+    export function setMaxSpeed(sprite: Sprite, value: number) {
+        getPhysics(sprite).MaxSpeed = value
+        // setDataNumber(sprite, 'maxSpeed', value);
     }
 
     /**
@@ -51,7 +48,7 @@ namespace sprites {
     //% weight=10
     //% blockGap=8
     export function setMinSpeedX(sprite: Sprite, value: number) {
-        setDataNumber(sprite, 'minSpeedX', value);
+        // setDataNumber(sprite, 'minSpeedX', value);
     }
 
     /**
@@ -62,7 +59,21 @@ namespace sprites {
     //% weight=10
     //% blockGap=8
     export function setDragCoefficent(sprite: Sprite, drag: number) {
-        setDataNumber(sprite, 'dragCoefficient', drag);
+        getPhysics(sprite).DragCoefficent = drag
+        // setDataNumber(sprite, 'dragCoefficient', drag);
+    }
+
+    /**
+     * Grab the physics object from the data map
+     */
+    export function getPhysics(sprite: Sprite) {
+        if (!sprite) return;
+
+        let spritePhysics = sprite.data[spritePhysicsClassKey]
+        if (!spritePhysics) {
+            spritePhysics = new physicsengineplus.PhysicsProperties()
+        }
+        return spritePhysics
     }
 
     /**
@@ -72,13 +83,6 @@ namespace sprites {
         if (!sprite || !name) return 0;
         const d = sprite.data;
         return d[name] as number;
-    }
-
-    /**
-     * Grab the physics object from the data map
-     */
-    function getPhysics(sprite: Sprite) {
-
     }
 
     /**

@@ -1,5 +1,5 @@
 function transferPhysicsEngine() {
-    let newPhysicsEngine = new ArcadePhysicsEnginePlus(500, 2, 4, 500)
+    let newPhysicsEngine = new physicsengineplus.ArcadePhysicsEnginePlus(500, 2, 4, 500)
     game.setPhysicsEngine(newPhysicsEngine)
 }
 

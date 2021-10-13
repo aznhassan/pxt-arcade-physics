@@ -1,3 +1,4 @@
+namespace physicsengineplus {
 /**
  * A 2d Fx8 vector
  */
@@ -17,12 +18,79 @@ class Vec2dFx8 {
     get Y(): number {
         return Fx.toInt(this._y)
     }
+
+    plus(vector: Vec2dFx8 ): Vec2dFx8 {
+        return new Vec2dFx8(this.X + vector.X, this.Y + vector.Y)
+    }
+}
+
+export class PhysicsProperties {
+    private _mass: Fx8
+    private _force: Vec2dFx8
+    private _impulse: Vec2dFx8
+    private _velocity: Vec2dFx8
+    private _maxSpeed: Fx8
+    private _useGoalSpeed: Boolean = false
+    private _coefficentOfRestitution: Fx8
+    private _dragCoefficent: Fx8
+
+    constructor() {
+        this._mass = Fx8(10)
+        this._force = new Vec2dFx8(0, 0)
+        this._impulse = new Vec2dFx8(0, 0)
+        this._velocity = new Vec2dFx8(0, 0)
+        this._maxSpeed = Fx8(1)
+        this._coefficentOfRestitution = Fx8(0)
+        this._dragCoefficent = Fx8(0.9)
+    }
+
+    get Mass(): number {
+        return Fx.toInt(this._mass)
+    }
+
+    set Mass(mass: number) {
+        this._mass = Fx8(mass)
+    }
+
+    get CoefficentOfRestitution(): number {
+        return Fx.toInt(this._coefficentOfRestitution)
+    }
+
+    set CoefficentOfRestitution(coefficentOfRestitution: number) {
+        this._coefficentOfRestitution = Fx8(coefficentOfRestitution)
+    }
+
+    get MaxSpeed(): number {
+        return Fx.toInt(this._maxSpeed)
+    }
+
+    set MaxSpeed(goalSpeed: number) {
+        this._useGoalSpeed = true
+        this._maxSpeed = Fx8(goalSpeed)
+    }
+
+    get DragCoefficent(): number {
+        return Fx.toInt(this._dragCoefficent)
+    }
+
+    set DragCoefficent(dragCoefficent: number) {
+        this._dragCoefficent = Fx8(dragCoefficent)
+    }
+
+    // The force will be applied on each tick, so add this force instead of replacing it
+    applyForce(x: number, y: number) {
+        this._force = new Vec2dFx8(x, y).plus(this._force)
+    }
+
+    applyImpulse(x: number, y: number) {
+        this._impulse = new Vec2dFx8(x, y).plus(this._impulse)
+    }
 }
 
 /**
  * An upgraded Physics Engine that includes drag
  */
-class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
+export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected _maxDrag: Fx8
     protected readonly halfAirDensity = Fx8(0.61) // in kg/m3 at sea level
     protected _debug: boolean
@@ -48,6 +116,7 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     }
 
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
+        let physics = sprites.getPhysics(sprite)
         const ovx = this.constrainMax(sprite._vx, sprite.data['maxSpeedX']);
         const ovy = this.constrain(sprite._vy);
         sprite._lastX = sprite._x;
@@ -227,4 +296,4 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
         );
     }
 }
-
+}
