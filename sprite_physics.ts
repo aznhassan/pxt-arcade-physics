@@ -1,5 +1,16 @@
 namespace sprites {
     /**
+     * The key used to access the sprite physics class object from the sprite data
+     */
+    const spritePhysicsClassKey = 'spritePhysics'
+
+    class SpritePhysics {
+        private _mass: Fx8
+        private _force: Fx8
+        private _impulse: Fx8
+    }
+    
+    /**
      * Sets the mass of a sprite
      */
     //% blockId=setMass block="set $sprite=variables_get mass to $value"
@@ -61,6 +72,13 @@ namespace sprites {
         if (!sprite || !name) return 0;
         const d = sprite.data;
         return d[name] as number;
+    }
+
+    /**
+     * Grab the physics object from the data map
+     */
+    function getPhysics(sprite: Sprite) {
+
     }
 
     /**

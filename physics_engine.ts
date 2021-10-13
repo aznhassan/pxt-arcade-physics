@@ -1,6 +1,27 @@
- /**
+/**
+ * A 2d Fx8 vector
+ */
+class Vec2dFx8 {
+    private readonly _x: Fx8
+    private readonly _y: Fx8
+
+    constructor(x: number, y: number) {
+        this._x = Fx8(x)
+        this._y = Fx8(y)
+    }
+
+    get X(): number {
+        return Fx.toInt(this._x)
+    }
+
+    get Y(): number {
+        return Fx.toInt(this._y)
+    }
+}
+
+/**
  * An upgraded Physics Engine that includes drag
-*/
+ */
 class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected _maxDrag: Fx8
     protected readonly halfAirDensity = Fx8(0.61) // in kg/m3 at sea level
@@ -40,7 +61,7 @@ class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             const area: Fx8 = Fx8(sprite.height / this.pixelsToMeter)
 
             if (sprite.data['mass']) {
-                this.debug(`Mass: ${sprite.data['mass']}`)
+                // this.debug(`Mass: ${sprite.data['mass']}`)
             }            
             // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
             let dragX = Fx.div(
