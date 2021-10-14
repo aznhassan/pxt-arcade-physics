@@ -108,6 +108,7 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected _maxDrag: Fx8
     protected readonly halfAirDensity = Fx8(0.61) // in kg/m3 at sea level
     protected readonly pixelsToMeter = 30;
+
     constructor(maxVelocity: number, minSingleStep: number, maxSingleStep: number, maxDrag: 500) {
         super(maxVelocity, minSingleStep, maxSingleStep);
         this.maxDrag = maxDrag;
@@ -124,64 +125,18 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
         // Let the other sprites use the old physics
         if (!sprites.isPhysicsPlusAvailible(sprite)) {
-            debug(`Running OLD physics`)
             return super.createMovingSprite(sprite, dtMs, dt2)
         }
 
+        // velocity = 
         let physics = sprites.getPhysics(sprite)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
 
         sprite._lastX = sprite._x;
         sprite._lastY = sprite._y;
-
-        // Calculate the drag
-        function calculateDragX(sprite: Sprite): Fx8 {
-            // Use the drag coefficient off a square if one is not set
-            const dragCoefficient: Fx8 = Fx8(physics.DragCoefficent)
-            const mass: Fx8 = Fx8(physics.Mass);
-            const area: Fx8 = Fx8(sprite.height / this.pixelsToMeter)
-
-            // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
-            let dragX = Fx.div(
-                Fx.mul(
-                    Fx.mul( 
-                        Fx.mul(
-                            this.halfAirDensity,
-                            Fx.mul(
-                                sprite._vx,
-                                sprite._vx
-                            )
-                        ),
-                        dragCoefficient
-                    ),
-                    area
-                ),
-                mass
-            )
-            let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
-                (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
-                / physics.Mass
         
-            return Fx.idiv(
-                Fx.imul(
-                    dragX,
-                    dtMs
-                ),
-                1000
-            );
-        };
-
-        // TODO: Figure out how to make this stronger when the velocity is low
-        let dragX = calculateDragX(sprite)
-        if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
-            dragX = Fx.neg(dragX)
-        }
-        sprite._vx = Fx.add(
-            sprite._vx,
-            dragX
-        )
-
+        this.applyDrag(sprite, physics, dtMs)
 
         if (sprite._ax) {
             sprite._vx = Fx.add(
@@ -290,6 +245,56 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             ),
             negMaxVel
         );
+    }
+
+    protected applyDrag(sprite: Sprite, physics: PhysicsProperties, dtMs: number) {
+        // Calculate the drag
+        function calculateDragX(sprite: Sprite): Fx8 {
+            // Use the drag coefficient off a square if one is not set
+            const dragCoefficient: Fx8 = Fx8(physics.DragCoefficent)
+            const mass: Fx8 = Fx8(physics.Mass);
+            const area: Fx8 = Fx8(sprite.height / this.pixelsToMeter)
+
+            // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
+            let dragX = Fx.div(
+                Fx.mul(
+                    Fx.mul(
+                        Fx.mul(
+                            this.halfAirDensity,
+                            Fx.mul(
+                                sprite._vx,
+                                sprite._vx
+                            )
+                        ),
+                        dragCoefficient
+                    ),
+                    area
+                ),
+                mass
+            )
+            let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
+                (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
+                / physics.Mass
+
+            return Fx.idiv(
+                Fx.imul(
+                    dragX,
+                    dtMs
+                ),
+                1000
+            );
+        };
+
+        // TODO: Figure out how to make this stronger when the velocity is low
+        let dragX = calculateDragX(sprite)
+        const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
+        if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
+            dragX = Fx.neg(dragX)
+        }
+        sprite._vx = Fx.add(
+            sprite._vx,
+            dragX
+        )
     }
 }
 }
