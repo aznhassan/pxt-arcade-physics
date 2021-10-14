@@ -174,13 +174,13 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
 
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
         // Let the other sprites use the old physics
-        if (!sprites.isPhysicsPlusAvailible(sprite)) {
+        if (!spritePhysics.isPhysicsPlusAvailible(sprite)) {
             return super.createMovingSprite(sprite, dtMs, dt2)
         }
 
         // velocity += t*force/mass + impulse/mass
-        let physics = sprites.getPhysics(sprite)
-        physics.onTick(dtMs)
+        let physics = spritePhysics.getPhysics(sprite)
+        // physics.onTick(dtMs)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
 
