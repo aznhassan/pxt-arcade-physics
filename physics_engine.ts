@@ -39,6 +39,8 @@ export class PhysicsProperties {
     private _useGoalSpeed: Boolean = false
     private _coefficentOfRestitution: Fx8
     private _dragCoefficent: Fx8
+    // This will be used by default
+    private _useOldPhysics: Boolean = true
 
     constructor() {
         this._mass = Fx8(1)
@@ -55,7 +57,7 @@ export class PhysicsProperties {
     }
 
     set Mass(mass: number) {
-        // debug(`Setting mass speed to: ${mass}`)
+        this._useOldPhysics = false
         this._mass = Fx8(mass)
     }
 
@@ -72,7 +74,6 @@ export class PhysicsProperties {
     }
 
     set MaxSpeed(goalSpeed: number) {
-        // debug(`Setting max speed to: ${goalSpeed}`)
         this._useGoalSpeed = true
         this._maxSpeed = Fx8(goalSpeed)
     }
@@ -82,7 +83,6 @@ export class PhysicsProperties {
     }
 
     set DragCoefficent(dragCoefficent: number) {
-        // debug(`Setting drag coefficent to: ${dragCoefficent}`)
         this._dragCoefficent = Fx8(dragCoefficent)
     }
 
@@ -122,7 +122,6 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     }
 
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
-        // debug(`Creating moving sprite... ${sprite}`)
         let physics = sprites.getPhysics(sprite)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
@@ -155,14 +154,9 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 mass
             )
             if (physics.Mass != 1) {       
-                // debug(`dragCoefficient: ${Fx.toInt(dragCoefficient)}`)
-                // debug(`mass: ${Fx.toInt(mass)}`)
-                // debug(`mass: ${Fx.toInt(mass)}`)
                 let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
                     (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
                     / physics.Mass
-                // debug(`NonFxCalculatedDrag: ${otherDragX}`)
-                // debug(`totalDrag: ${Fx.toFloat(dragX)}`)
             }
             
             return Fx.idiv(
@@ -180,13 +174,10 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
                 dragX = Fx.neg(dragX)
             }
-            // debug(`_vx: ${Fx.toFloat(sprite._vx)}`)
-            // debug(`dragx: ${Fx.toFloat(dragX)}`)
             sprite._vx = Fx.add(
                 sprite._vx,
                 dragX
             )
-            // debug(`new _vx: ${Fx.toFloat(sprite._vx)}`)
         }
 
 
@@ -209,7 +200,6 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 ),
                 1000
             );
-            debug(`Friction X: ${Fx.toFloat(fx)} Vel X: ${sprite._vx}`)
             const c = Fx.compare(sprite._vx, fx);
             if (c < 0) // v < f, v += f
                 sprite._vx = Fx.min(Fx.zeroFx8, Fx.add(sprite._vx, fx));
@@ -255,13 +245,9 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
         // if (minSpeedX) {
         //     if (Fx.compare(Fx.abs(sprite._vx), Fx8(minSpeedX)) < 0) {
         //         // Only stop moving if no acceleration is being applied
-        //         debug(`accelerationx: ${sprite.ax}`)
         //         if (sprite.ax == 0) {
-        //             debug(`Below the min speed of ${minSpeedX}`)
         //             sprite._vx = Fx.zeroFx8
         //         }
-        //     } else {
-        //         debug(`${Fx.toFloat(sprite._vx)} > ${minSpeedX}`)
         //     }
         // }
 
