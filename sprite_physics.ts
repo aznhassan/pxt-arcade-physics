@@ -65,9 +65,16 @@ namespace sprites {
     export function getPhysics(sprite: Sprite) {
         if (!sprite) return;
 
-        if (!sprite.data[spritePhysicsClassKey]) {
+        if (!isPhysicsPlusAvailible(sprite)) {
             sprite.data[spritePhysicsClassKey] = new physicsengineplus.PhysicsProperties()
         }
         return sprite.data[spritePhysicsClassKey]
+    }
+
+    /**
+     * Has the new physics plus class been added to this sprite?
+     */
+    export function isPhysicsPlusAvailible(sprite: Sprite): Boolean {
+        return !!sprite.data[spritePhysicsClassKey]
     }
 }

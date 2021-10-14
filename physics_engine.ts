@@ -122,6 +122,12 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     }
 
     protected createMovingSprite(sprite: Sprite, dtMs: number, dt2: number): MovingSprite {
+        // Let the other sprites use the old physics
+        if (!sprites.isPhysicsPlusAvailible(sprite)) {
+            debug(`Running OLD physics`)
+            return super.createMovingSprite(sprite, dtMs, dt2)
+        }
+
         let physics = sprites.getPhysics(sprite)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
@@ -153,12 +159,10 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 ),
                 mass
             )
-            if (physics.Mass != 1) {       
-                let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
-                    (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
-                    / physics.Mass
-            }
-            
+            let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
+                (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
+                / physics.Mass
+        
             return Fx.idiv(
                 Fx.imul(
                     dragX,
@@ -168,17 +172,15 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             );
         };
 
-        if (physics.Mass) {
-            // TODO: Figure out how to make this stronger when the velocity is low
-            let dragX = calculateDragX(sprite)
-            if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
-                dragX = Fx.neg(dragX)
-            }
-            sprite._vx = Fx.add(
-                sprite._vx,
-                dragX
-            )
+        // TODO: Figure out how to make this stronger when the velocity is low
+        let dragX = calculateDragX(sprite)
+        if (Fx.compare(Fx.zeroFx8, ovx) < 0) {
+            dragX = Fx.neg(dragX)
         }
+        sprite._vx = Fx.add(
+            sprite._vx,
+            dragX
+        )
 
 
         if (sprite._ax) {
