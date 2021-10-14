@@ -24,7 +24,8 @@ namespace sprites {
     //% weight=10
     //% blockGap=8
     export function getMass(sprite: Sprite): number {
-        return getPhysics(sprite).Mass
+        const mass = getPhysics(sprite).Mass
+        return mass
         // return readDataNumber(sprite, 'mass');
     }
 
@@ -69,11 +70,10 @@ namespace sprites {
     export function getPhysics(sprite: Sprite) {
         if (!sprite) return;
 
-        let spritePhysics = sprite.data[spritePhysicsClassKey]
-        if (!spritePhysics) {
-            spritePhysics = new physicsengineplus.PhysicsProperties()
+        if (!sprite.data[spritePhysicsClassKey]) {
+            sprite.data[spritePhysicsClassKey] = new physicsengineplus.PhysicsProperties()
         }
-        return spritePhysics
+        return sprite.data[spritePhysicsClassKey]
     }
 
     /**

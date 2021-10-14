@@ -1,6 +1,8 @@
+// let physicsEnginePlus = new physicsengineplus.ArcadePhysicsEnginePlus(500, 2, 4, 500)
+
 function transferPhysicsEngine() {
-    let newPhysicsEngine = new physicsengineplus.ArcadePhysicsEnginePlus(500, 2, 4, 500)
-    game.setPhysicsEngine(newPhysicsEngine)
+    let physicsEnginePlus = new physicsengineplus.ArcadePhysicsEnginePlus(500, 2, 4, 500)
+    game.setPhysicsEngine(physicsEnginePlus)
 }
 
 let sceneChangeHandler = (oldScene: scene.Scene) => {
@@ -10,9 +12,9 @@ let sceneChangeHandler = (oldScene: scene.Scene) => {
     controller.setRetainVelocityOnNoInput(true);
     controller.useAccelerationInstead(true);
 }
-console.log("[HASUFI] HELLO THERE")
+console.log("[main] HELLO THERE")
 transferPhysicsEngine()
 controller.setRetainVelocityOnNoInput(true);
-console.log("[HASUFI] Replaced the old physics engine with a new one")
+console.log("[main] Replaced the old physics engine with a new one")
 game.addScenePushHandler(sceneChangeHandler)
 
