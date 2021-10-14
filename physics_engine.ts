@@ -12,9 +12,13 @@ class Vec2dFx8 {
     private readonly _x: Fx8
     private readonly _y: Fx8
 
-    constructor(x: number, y: number) {
-        this._x = Fx8(x)
-        this._y = Fx8(y)
+    constructor(x: Fx8, y: Fx8) {
+        this._x = x
+        this._y = y
+    }
+
+    static fromInteger(x: number, y: number): Vec2dFx8 {
+        return new Vec2dFx8(Fx8(x), Fx8(y))
     }
 
     get X(): number {
@@ -26,7 +30,31 @@ class Vec2dFx8 {
     }
 
     plus(vector: Vec2dFx8 ): Vec2dFx8 {
-        return new Vec2dFx8(this.X + vector.X, this.Y + vector.Y)
+        return new Vec2dFx8(Fx.add(this._x, vector._x), Fx.add(this._y, vector._y))
+        // return new Vec2dFx8(this.X + vector.X, this.Y + vector.Y)
+    }
+
+    smult(scalar: number): Vec2dFx8;
+    smult(scalar: Fx8): Vec2dFx8;
+    smult(scalar: number | Fx8): Vec2dFx8 {
+        if (typeof scalar == "number") {
+            return new Vec2dFx8(Fx.imul(this._x, scalar), Fx.imul(this._y, scalar))
+        } else {
+            return new Vec2dFx8(Fx.mul(this._x, scalar), Fx.mul(this._y, scalar))
+        }
+    }
+    sdiv(scalar: number): Vec2dFx8;
+    sdiv(scalar: Fx8): Vec2dFx8;
+    sdiv(scalar: number | Fx8): Vec2dFx8 {
+        if (typeof scalar == "number") {
+            return new Vec2dFx8(Fx.idiv(this._x, scalar), Fx.idiv(this._y, scalar))
+        } else {
+            return new Vec2dFx8(Fx.div(this._x, scalar), Fx.div(this._y, scalar))
+        }
+    }
+
+    toString(): String {
+        return `(${this.X}, ${this.Y})`
     }
 }
 
@@ -44,9 +72,9 @@ export class PhysicsProperties {
 
     constructor() {
         this._mass = Fx8(1)
-        this._force = new Vec2dFx8(0, 0)
-        this._impulse = new Vec2dFx8(0, 0)
-        this._velocity = new Vec2dFx8(0, 0)
+        this._force = Vec2dFx8.fromInteger(0, 0)
+        this._impulse = Vec2dFx8.fromInteger(0, 0)
+        this._velocity = Vec2dFx8.fromInteger(0, 0)
         this._maxSpeed = Fx8(1)
         this._coefficentOfRestitution = Fx8(0)
         this._dragCoefficent = Fx8(1.05)
@@ -86,13 +114,35 @@ export class PhysicsProperties {
         this._dragCoefficent = Fx8(dragCoefficent)
     }
 
+    get Velocity(): Vec2dFx8 {
+        return this._velocity
+    }
+
     // The force will be applied on each tick, so add this force instead of replacing it
     applyForce(x: number, y: number) {
-        this._force = new Vec2dFx8(x, y).plus(this._force)
+        debug(`Applying force: ${Vec2dFx8.fromInteger(x, y)}`)
+        this._force = Vec2dFx8.fromInteger(x, y).plus(this._force)
     }
 
     applyImpulse(x: number, y: number) {
-        this._impulse = new Vec2dFx8(x, y).plus(this._impulse)
+        debug(`Applying impulse: ${Vec2dFx8.fromInteger(x, y)}`)
+        this._impulse = Vec2dFx8.fromInteger(x, y).plus(this._impulse)
+    }
+
+    onTick(dtMs: number) {
+        //TODO: Add goal velocity
+        // velocity += t*force/mass + impulse/mass
+        let oldVelocity = this._velocity
+        this._velocity = this._velocity.plus(
+            this._force.smult(dtMs).sdiv(this._mass).plus(
+                this._impulse.sdiv(this._mass)
+            )
+        )
+
+        // Reset force and impulse since we've applied them
+        this._force = Vec2dFx8.fromInteger(0, 0)
+        this._impulse = Vec2dFx8.fromInteger(0, 0)
+        debug(`Old Velocity: ${oldVelocity}, new velocity ${this._velocity}`)
     }
 
     toString(): String {
@@ -128,15 +178,16 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             return super.createMovingSprite(sprite, dtMs, dt2)
         }
 
-        // velocity = 
+        // velocity += t*force/mass + impulse/mass
         let physics = sprites.getPhysics(sprite)
+        physics.onTick(dtMs)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
 
         sprite._lastX = sprite._x;
         sprite._lastY = sprite._y;
         
-        this.applyDrag(sprite, physics, dtMs)
+        // this.applyDrag(sprite, physics, dtMs)
 
         if (sprite._ax) {
             sprite._vx = Fx.add(
