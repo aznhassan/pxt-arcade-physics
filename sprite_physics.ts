@@ -7,8 +7,8 @@ namespace sprites {
     /**
      * Sets the mass of a sprite
      */
-    //% blockId=setMass block="set $sprite=variables_get mass to $value"
-    //% group="Physics"
+    //% blockId=setMass block="set $sprite=variables_get(mySprite) mass to $value"
+    //% group="Properties"
     //% weight=10
     //% blockGap=8
     export function setMass(sprite: Sprite, value: number) {
@@ -18,8 +18,8 @@ namespace sprites {
     /**
      * Gets the mass of a sprite
      */
-    //% blockId=spriteDataGetNumber block="$sprite=variables_get mass"
-    //% group="Physics"
+    //% blockId=spriteDataGetNumber block="$sprite=variables_get(mySprite) mass"
+    //% group="Properties"
     //% weight=10
     //% blockGap=8
     export function getMass(sprite: Sprite): number {
@@ -30,8 +30,8 @@ namespace sprites {
     /**
      * Sets the max horizontal speed of a sprite
      */
-    //% blockId=setMaxSpeed block="set $sprite=variables_get maxSpeed to $value"
-    //% group="Physics"
+    //% blockId=setMaxSpeed block="set $sprite=variables_get(mySprite) maxSpeed to $value"
+    //% group="Properties"
     //% weight=10
     //% blockGap=8
     export function setMaxSpeed(sprite: Sprite, value: number) {
@@ -41,8 +41,8 @@ namespace sprites {
     /**
      * Sets the min horizontal speed of a sprite
      */
-    //% blockId=setMinSpeedX block="set $sprite=variables_get minSpeedX to $value"
-    //% group="Physics"
+    //% blockId=setMinSpeedX block="set $sprite=variables_get(mySprite) minSpeedX to $value"
+    //% group="Properties"
     //% weight=10
     //% blockGap=8
     export function setMinSpeedX(sprite: Sprite, value: number) {
@@ -51,12 +51,25 @@ namespace sprites {
     /**
      * Sets the drag coefficient of a sprite
      */
-    //% blockId=setDragCoefficent block="set $sprite=variables_get dragCoefficient to $drag"
-    //% group="Physics"
+    //% blockId=setDragCoefficent block="set $sprite=variables_get(mySprite) dragCoefficient to $drag"
+    //% group="Properties"
     //% weight=10
     //% blockGap=8
     export function setDragCoefficent(sprite: Sprite, drag: number) {
         getPhysics(sprite).DragCoefficent = drag
+    }
+
+    /**
+     * Apply a force to the sprite
+     */
+    //% blockId=applyForce block="set $sprite=variables_get(mySprite) force to $x, $y"
+    //% group="Movement"
+    //% weight=10
+    //% blockGap=8
+    //% x.min=-100 x.max=100
+    //% y.min=-100 y.max=100
+    export function applyForce(sprite: Sprite, x: number, y: number) {
+        
     }
 
     /**
