@@ -32,12 +32,13 @@ namespace spritePhysics {
     /**
      * Sets the max horizontal speed of a sprite
      */
-    //% blockId=setMaxSpeed block="set $sprite=variables_get(mySprite) maxSpeed to $value"
+    //% blockId=setMaxSpeed block="set $sprite=variables_get(mySprite) maxSpeed to $speed"
     //% group="Properties"
     //% weight=10
     //% blockGap=8
-    export function setMaxSpeed(sprite: Sprite, value: number) {
-        getPhysics(sprite).MaxSpeed = value
+    //% speed.min=10 speed.max=500
+    export function setMaxSpeed(sprite: Sprite, speed: number) {
+        getPhysics(sprite).MaxSpeed = speed
     }
 
     /**
@@ -68,8 +69,8 @@ namespace spritePhysics {
     //% group="Movement"
     //% weight=10
     //% blockGap=8
-    //% x.min=-100 x.max=100
-    //% y.min=-100 y.max=100
+    //% x.min=-1000 x.max=1000
+    //% y.min=-1000 y.max=1000
     export function applyForce(sprite: Sprite, x: number, y: number) {
         getPhysics(sprite).applyForce(x, y)
     }

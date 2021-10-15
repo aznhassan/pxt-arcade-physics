@@ -1,10 +1,11 @@
 namespace physicsengineplus {
-    let _debug: boolean = true
-    function debug(message: string | object) {
-        if (_debug) {
-            console.log("[physics] " + message)
-        }
+let _debug: boolean = true
+function debug(message: string | object) {
+    if (_debug) {
+        console.log("[physics] " + message)
     }
+}
+const PIXELS_TO_METER = 30;
 /**
  * A 2d Fx8 vector
  */
@@ -27,6 +28,14 @@ class Vec2dFx8 {
 
     get Y(): number {
         return Fx.toInt(this._y)
+    }
+
+    get XFx8(): Fx8 {
+        return this._x
+    }
+
+    get YFx8(): Fx8 {
+        return this._y
     }
 
     plus(vector: Vec2dFx8 ): Vec2dFx8 {
@@ -69,7 +78,7 @@ export class PhysicsProperties {
         this._force = Vec2dFx8.fromInteger(0, 0)
         this._impulse = Vec2dFx8.fromInteger(0, 0)
         this._velocity = Vec2dFx8.fromInteger(0, 0)
-        this._maxSpeed = Fx8(1)
+        this._maxSpeed = Fx8(500)
         this._coefficentOfRestitution = Fx8(0)
         this._dragCoefficent = Fx8(1.05)
     }
@@ -92,6 +101,10 @@ export class PhysicsProperties {
 
     get MaxSpeed(): number {
         return Fx.toInt(this._maxSpeed)
+    }
+
+    get MaxSpeedFx8(): Fx8 {
+        return this._maxSpeed
     }
 
     set MaxSpeed(goalSpeed: number) {
@@ -126,17 +139,37 @@ export class PhysicsProperties {
         let oldVelocity = this._velocity
         this._velocity = this._velocity.plus(
             this._force.smult(dtMs)
-            .sdiv(1000)
-            .sdiv(this._mass)
-            .plus(
-                this._impulse.sdiv(this._mass)
-            )
+                .smult(PIXELS_TO_METER)
+                .sdiv(1000)
+                .sdiv(this._mass)
+                .plus(
+                    this._impulse
+                        .smult(PIXELS_TO_METER)
+                        .sdiv(this._mass)
+                )
         )
+        // contrain the Velocity
+        this._velocity = new Vec2dFx8(
+                                this.constrain(this._velocity.XFx8),
+                                this.constrain(this._velocity.YFx8)
+                                );
 
         // Reset force and impulse since we've applied them
         this._force = Vec2dFx8.fromInteger(0, 0)
         this._impulse = Vec2dFx8.fromInteger(0, 0)
         debug(`Old Velocity: ${oldVelocity}, new velocity ${this._velocity}`)
+    }
+
+    protected constrain(v: Fx8, max?: Fx8): Fx8 {
+        const maxVel = max ? max : this.MaxSpeedFx8
+        const negMaxVel = Fx.neg(maxVel)
+        return Fx.max(
+            Fx.min(
+                maxVel,
+                v
+            ),
+            negMaxVel
+        );
     }
 
     toString(): String {
@@ -151,7 +184,6 @@ export class PhysicsProperties {
 export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
     protected _maxDrag: Fx8
     protected readonly halfAirDensity = Fx8(0.61) // in kg/m3 at sea level
-    protected readonly pixelsToMeter = 30;
 
     constructor(maxVelocity: number, minSingleStep: number, maxSingleStep: number, maxDrag: 500) {
         super(maxVelocity, minSingleStep, maxSingleStep);
@@ -174,8 +206,9 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
 
         // velocity += t*force/mass + impulse/mass
         let physics = spritePhysics.getPhysics(sprite)
-        physics.onTick(dtMs)
-        const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
+        // The velocity is already constrained
+        const ovx = physics.Velocity.XFx8
+        // const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
 
         sprite._lastX = sprite._x;
@@ -183,33 +216,34 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
         
         // this.applyDrag(sprite, physics, dtMs)
 
-        if (sprite._ax) {
-            sprite._vx = Fx.add(
-                sprite._vx,
-                Fx.idiv(
-                    Fx.imul(
-                        sprite._ax,
-                        dtMs
-                    ),
-                    1000
-                )
-            );
-        } else if (sprite._fx) {
-            const fx = Fx.idiv(
-                Fx.imul(
-                    sprite._fx,
-                    dtMs
-                ),
-                1000
-            );
-            const c = Fx.compare(sprite._vx, fx);
-            if (c < 0) // v < f, v += f
-                sprite._vx = Fx.min(Fx.zeroFx8, Fx.add(sprite._vx, fx));
-            else if (c > 0) // v > f, v -= f
-                sprite._vx = Fx.max(Fx.zeroFx8, Fx.sub(sprite._vx, fx));
-            else
-                sprite._vx = Fx.zeroFx8
-        }
+        physics.onTick(dtMs)
+        // if (sprite._ax) {
+        //     sprite._vx = Fx.add(
+        //         sprite._vx,
+        //         Fx.idiv(
+        //             Fx.imul(
+        //                 sprite._ax,
+        //                 dtMs
+        //             ),
+        //             1000
+        //         )
+        //     );
+        // } else if (sprite._fx) {
+        //     const fx = Fx.idiv(
+        //         Fx.imul(
+        //             sprite._fx,
+        //             dtMs
+        //         ),
+        //         1000
+        //     );
+        //     const c = Fx.compare(sprite._vx, fx);
+        //     if (c < 0) // v < f, v += f
+        //         sprite._vx = Fx.min(Fx.zeroFx8, Fx.add(sprite._vx, fx));
+        //     else if (c > 0) // v > f, v -= f
+        //         sprite._vx = Fx.max(Fx.zeroFx8, Fx.sub(sprite._vx, fx));
+        //     else
+        //         sprite._vx = Fx.zeroFx8
+        // }
 
         if (sprite._ay) { // TODO(aznhassan): Consider getting rid of the only ax or fx req
             sprite._vy = Fx.add(
@@ -239,7 +273,9 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 sprite._vy = Fx.zeroFx8;
         }
 
-        sprite._vx = this.constrainMax(sprite._vx, physics.MaxSpeed);
+        // The velocity is already constrained
+        sprite._vx = physics.Velocity.XFx8;
+        // sprite._vx = this.constrainMax(physics.Velocity.XFx8, physics.MaxSpeed);
         sprite._vy = this.constrain(sprite._vy);
 
         // // Set the speed to zero if we're below the min speed
@@ -298,7 +334,7 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
             // Use the drag coefficient off a square if one is not set
             const dragCoefficient: Fx8 = Fx8(physics.DragCoefficent)
             const mass: Fx8 = Fx8(physics.Mass);
-            const area: Fx8 = Fx8(sprite.height / this.pixelsToMeter)
+            const area: Fx8 = Fx8(sprite.height / PIXELS_TO_METER)
 
             // Drag = (halfAirDensity * (vx^2) * dragCoefficient) / mass
             let dragX = Fx.div(
@@ -318,7 +354,7 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
                 mass
             )
             let otherDragX = (Fx.toFloat(this.halfAirDensity) * (sprite.vx * sprite.vx) *
-                (physics.DragCoefficent) * (sprite.height / this.pixelsToMeter))
+                (physics.DragCoefficent) * (sprite.height / PIXELS_TO_METER))
                 / physics.Mass
 
             return Fx.idiv(
