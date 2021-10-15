@@ -64,22 +64,21 @@ namespace spritePhysics {
     /**
      * Apply a force to the sprite
      */
-    //% blockId=applyForce block="set $sprite=variables_get(mySprite) force to $x, $y"
+    //% blockId=applyForce block="apply $sprite=variables_get(mySprite) force of $x, $y"
     //% group="Movement"
     //% weight=10
     //% blockGap=8
     //% x.min=-100 x.max=100
     //% y.min=-100 y.max=100
     export function applyForce(sprite: Sprite, x: number, y: number) {
-
+        getPhysics(sprite).applyForce(x, y)
     }
 
     /**
      * Grab the physics object from the data map
      */
-    export function getPhysics(sprite: Sprite) {
-        if (!sprite) return;
-
+    export function getPhysics(sprite: Sprite): physicsengineplus.PhysicsProperties {
+        // if (!sprite) return;
         if (!isPhysicsPlusAvailible(sprite)) {
             sprite.data[spritePhysicsClassKey] = new physicsengineplus.PhysicsProperties()
         }

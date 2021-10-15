@@ -31,11 +31,8 @@ class Vec2dFx8 {
 
     plus(vector: Vec2dFx8 ): Vec2dFx8 {
         return new Vec2dFx8(Fx.add(this._x, vector._x), Fx.add(this._y, vector._y))
-        // return new Vec2dFx8(this.X + vector.X, this.Y + vector.Y)
     }
 
-    smult(scalar: number): Vec2dFx8;
-    smult(scalar: Fx8): Vec2dFx8;
     smult(scalar: number | Fx8): Vec2dFx8 {
         if (typeof scalar == "number") {
             return new Vec2dFx8(Fx.imul(this._x, scalar), Fx.imul(this._y, scalar))
@@ -43,8 +40,7 @@ class Vec2dFx8 {
             return new Vec2dFx8(Fx.mul(this._x, scalar), Fx.mul(this._y, scalar))
         }
     }
-    sdiv(scalar: number): Vec2dFx8;
-    sdiv(scalar: Fx8): Vec2dFx8;
+
     sdiv(scalar: number | Fx8): Vec2dFx8 {
         if (typeof scalar == "number") {
             return new Vec2dFx8(Fx.idiv(this._x, scalar), Fx.idiv(this._y, scalar))
@@ -120,21 +116,22 @@ export class PhysicsProperties {
 
     // The force will be applied on each tick, so add this force instead of replacing it
     applyForce(x: number, y: number) {
-        debug(`Applying force: ${Vec2dFx8.fromInteger(x, y)}`)
         this._force = Vec2dFx8.fromInteger(x, y).plus(this._force)
     }
 
     applyImpulse(x: number, y: number) {
-        debug(`Applying impulse: ${Vec2dFx8.fromInteger(x, y)}`)
         this._impulse = Vec2dFx8.fromInteger(x, y).plus(this._impulse)
     }
 
-    onTick(dtMs: number) {
-        //TODO: Add goal velocity
+    public onTick(dtMs: number): void {
+        // //TODO: Add goal velocity
         // velocity += t*force/mass + impulse/mass
         let oldVelocity = this._velocity
         this._velocity = this._velocity.plus(
-            this._force.smult(dtMs).sdiv(this._mass).plus(
+            this._force.smult(dtMs)
+            .sdiv(1000)
+            .sdiv(this._mass)
+            .plus(
                 this._impulse.sdiv(this._mass)
             )
         )
@@ -180,7 +177,7 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
 
         // velocity += t*force/mass + impulse/mass
         let physics = spritePhysics.getPhysics(sprite)
-        // physics.onTick(dtMs)
+        physics.onTick(dtMs)
         const ovx = this.constrainMax(sprite._vx, physics.MaxSpeed);
         const ovy = this.constrain(sprite._vy);
 
