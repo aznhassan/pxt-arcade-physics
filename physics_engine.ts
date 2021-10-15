@@ -63,8 +63,6 @@ export class PhysicsProperties {
     private _useGoalSpeed: Boolean = false
     private _coefficentOfRestitution: Fx8
     private _dragCoefficent: Fx8
-    // This will be used by default
-    private _useOldPhysics: Boolean = true
 
     constructor() {
         this._mass = Fx8(1)
@@ -81,7 +79,6 @@ export class PhysicsProperties {
     }
 
     set Mass(mass: number) {
-        this._useOldPhysics = false
         this._mass = Fx8(mass)
     }
 
