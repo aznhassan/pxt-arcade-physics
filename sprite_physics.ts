@@ -72,7 +72,21 @@ namespace spritePhysics {
     //% x.min=-1000 x.max=1000
     //% y.min=-1000 y.max=1000
     export function applyForce(sprite: Sprite, x: number, y: number) {
+        console.log(`[sprites] Applying force (${x},${y})`)
         getPhysics(sprite).applyForce(x, y)
+    }
+
+    /**
+     * Apply a impulse to the sprite
+     */
+    //% blockId=applyImpulse block="apply $sprite=variables_get(mySprite) impulse of $x, $y"
+    //% group="Movement"
+    //% weight=10
+    //% blockGap=8
+    //% x.min=-1000 x.max=1000
+    //% y.min=-1000 y.max=1000
+    export function applyImpulse(sprite: Sprite, x: number, y: number) {
+        getPhysics(sprite).applyImpulse(x, y)
     }
 
     /**

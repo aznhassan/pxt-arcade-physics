@@ -42,21 +42,41 @@ class Vec2dFx8 {
         return new Vec2dFx8(Fx.add(this._x, vector._x), Fx.add(this._y, vector._y))
     }
 
-    smult(scalar: number | Fx8): Vec2dFx8 {
-        if (typeof scalar == "number") {
-            return new Vec2dFx8(Fx.imul(this._x, scalar), Fx.imul(this._y, scalar))
-        } else {
-            return new Vec2dFx8(Fx.mul(this._x, scalar), Fx.mul(this._y, scalar))
-        }
+    smult(scalar: number): Vec2dFx8 {
+        const result = new Vec2dFx8(Fx.imul(this._x, scalar), Fx.imul(this._y, scalar))
+        debug(`Multiplying ${this.toString()} by ${scalar}: ${result.toString()}`)
+        debug(`Scalar as Fx8: ${(scalar as any as Fx8)}`)
+        debug(`Scalar as to Fx8: ${(Fx8(scalar))}`)
+        debug(`Scalar as number: ${(scalar as any as number)}`)
+        debug(`_x as number: ${(this._x as any as number)} vs toInt: ${Fx.toInt(this._x)}`)
+        debug(`multiplied together: ${Fx.imul(this._x, scalar)}`)
+        debug(`multiplied together as numbers: ${(this._x as any as number) * (scalar as any as number)}`)
+        debug(`multiplied together as numbers via imul: ${Math.imul((this._x as any as number), scalar)}`)
+        debug(`multiplied together as converted numbers via imul: ${Math.imul((this._x as any as number), scalar)}`)
+        // TODO: Why does Fx.idiv not convert the number argument into an Fx8? At the very least, it'll need to divide
+        // the final result by 256 for it be considered the valid Fx8 result
+        // (A / 256) * (B / 256) == AB / 256^2 == AB / 65536
+        debug(`multiplied together the right way: ${Math.idiv(Math.imul((this._x as any as number), (Fx8(scalar) as any as number)), 65536)}`)
+        return result;
     }
 
-    sdiv(scalar: number | Fx8): Vec2dFx8 {
-        if (typeof scalar == "number") {
-            return new Vec2dFx8(Fx.idiv(this._x, scalar), Fx.idiv(this._y, scalar))
-        } else {
-            return new Vec2dFx8(Fx.div(this._x, scalar), Fx.div(this._y, scalar))
-        }
+    fmult(scalar: Fx8): Vec2dFx8 {
+        return new Vec2dFx8(Fx.mul(this._x, scalar), Fx.mul(this._y, scalar))
     }
+
+
+    sdiv(scalar: number): Vec2dFx8 {
+        const result = new Vec2dFx8(Fx.idiv(this._x, scalar), Fx.idiv(this._y, scalar))
+        debug(`Dividing ${this.toString()} by ${scalar}: ${result.toString()}`)
+        return result
+    }
+
+    fdiv(scalar: Fx8): Vec2dFx8 {
+        const result = new Vec2dFx8(Fx.div(this._x, scalar), Fx.div(this._y, scalar))
+        debug(`Dividing ${this.toString()} by ${Fx.toInt(scalar)}: ${result.toString()}`)
+        return result
+    }
+
 
     toString(): String {
         return `(${this.X}, ${this.Y})`
@@ -108,6 +128,8 @@ export class PhysicsProperties {
     }
 
     set MaxSpeed(goalSpeed: number) {
+        if (goalSpeed < 10) goalSpeed = 10
+        if (goalSpeed > 500) goalSpeed = 500
         this._useGoalSpeed = true
         this._maxSpeed = Fx8(goalSpeed)
     }
@@ -127,6 +149,7 @@ export class PhysicsProperties {
     // The force will be applied on each tick, so add this force instead of replacing it
     applyForce(x: number, y: number) {
         this._force = Vec2dFx8.fromInteger(x, y).plus(this._force)
+        debug(`New Force: ${this._force}`)
     }
 
     applyImpulse(x: number, y: number) {
@@ -136,45 +159,64 @@ export class PhysicsProperties {
     public onTick(dtMs: number): void {
         // //TODO: Add goal velocity
         // velocity += t*force/mass + impulse/mass
+        const oldForce = this._force;
+        debug(`onTick Physics: ${this.toString()}`)
+        // debug(`dtMs/1000 * ${PIXELS_TO_METER} * (force/${this.Mass}): ${
+        //     oldForce},
+        //     ${oldForce
+        //         .smult(dtMs/1000)},${oldForce
+        //         .smult(dtMs/1000)
+        //         .smult(PIXELS_TO_METER)},${oldForce
+        //         .smult(dtMs/1000)
+        //         .smult(PIXELS_TO_METER)
+        //         .sdiv(this._mass)}
+        //         `)
+
         let oldVelocity = this._velocity
         this._velocity = this._velocity.plus(
-            this._force.smult(dtMs)
+            oldForce
+                .smult(dtMs/1000)
                 .smult(PIXELS_TO_METER)
-                .sdiv(1000)
-                .sdiv(this._mass)
-                .plus(
-                    this._impulse
-                        .smult(PIXELS_TO_METER)
-                        .sdiv(this._mass)
-                )
+                .fdiv(this._mass)
+        ).plus(
+            this._impulse
+                .smult(PIXELS_TO_METER)
+                .fdiv(this._mass)
         )
         // contrain the Velocity
+        // debug(`Old Velocity: ${oldVelocity}, new pre-contrained velocity ${this._velocity}`)
         this._velocity = new Vec2dFx8(
                                 this.constrain(this._velocity.XFx8),
                                 this.constrain(this._velocity.YFx8)
                                 );
+        // debug(`Post-contrained velocity ${this._velocity}`)
 
         // Reset force and impulse since we've applied them
-        this._force = Vec2dFx8.fromInteger(0, 0)
+        if (oldForce.X != 0 || oldForce.Y != 0) {
+            debug(`Resetting force...`)
+            this._force = Vec2dFx8.fromInteger(0, 0)
+        } else {
+            debug(`Leaving force alone...`)
+        }
         this._impulse = Vec2dFx8.fromInteger(0, 0)
-        debug(`Old Velocity: ${oldVelocity}, new velocity ${this._velocity}`)
+        // debug(`Old Velocity: ${oldVelocity}, new velocity ${this._velocity}`)
     }
 
     protected constrain(v: Fx8, max?: Fx8): Fx8 {
-        const maxVel = max ? max : this.MaxSpeedFx8
-        const negMaxVel = Fx.neg(maxVel)
+        const maxSpeed = max ? max : this.MaxSpeedFx8
+        const negMaxSpeed = Fx.neg(maxSpeed)
         return Fx.max(
             Fx.min(
-                maxVel,
+                maxSpeed,
                 v
             ),
-            negMaxVel
+            negMaxSpeed
         );
     }
 
     toString(): String {
         return `Mass: ${this.Mass}, DragCoefficent: ${this.DragCoefficent}, ` +
-                `MaxSpeed: ${this.MaxSpeed}`
+                `MaxSpeed: ${this.MaxSpeed}, Force: ${this._force}`
     }
 }
 
@@ -216,7 +258,9 @@ export class ArcadePhysicsEnginePlus extends ArcadePhysicsEngine {
         
         // this.applyDrag(sprite, physics, dtMs)
 
+        debug(`Physics: ${physics.toString()}`)
         physics.onTick(dtMs)
+        debug(`--------------------------------------------------------------`)
         // if (sprite._ax) {
         //     sprite._vx = Fx.add(
         //         sprite._vx,
